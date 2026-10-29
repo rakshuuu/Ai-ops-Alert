@@ -1,0 +1,365 @@
+import { Alert, Incident, ServiceInfo, ServiceTier } from '../types';
+
+export const ALL_SERVICES_NAMES: string[] = [
+  "API Gateway", "Auth Service", "User Service", "Billing Service", "Payment Service",
+  "Order Service", "Catalog Service", "Search Service", "Recommendation Service", "Cart Service",
+  "Checkout Service", "Notification Service", "Email Service", "SMS Service", "Profile Service",
+  "Session Service", "Analytics Service", "Reporting Service", "Admin Service", "Media Service",
+  "Image Processor", "Video Processor", "Upload Service", "Download Service", "Feed Service",
+  "Comment Service", "Review Service", "Rating Service", "Inventory Service", "Shipping Service",
+  "Tax Service", "Invoice Service", "Refund Service", "Fraud Detection", "Risk Engine",
+  "Customer Support", "Feature Flags", "Experiment Service", "Search Indexer", "Cache Service",
+  "Redis Cluster", "Primary Database", "Read Replica", "Data Warehouse", "Event Bus",
+  "Kafka Broker", "Worker Pool", "Scheduler", "Background Jobs", "Webhook Service",
+  "Integration Hub", "CRM Connector", "ERP Connector", "Audit Service", "Compliance Service",
+  "Secrets Service", "Config Service", "Discovery Service", "Load Balancer", "Edge Proxy",
+  "Metrics Collector", "Log Pipeline", "Trace Collector", "Status Page", "Object Storage",
+  "CDN", "Auth Database", "Billing Database", "Orders Database", "Search Database"
+];
+
+export const SERVICE_TIER_MAPPING: Record<string, ServiceTier> = {
+  // Data & Storage
+  "Primary Database": "Data & Storage",
+  "Read Replica": "Data & Storage",
+  "Redis Cluster": "Data & Storage",
+  "Cache Service": "Data & Storage",
+  "Auth Database": "Data & Storage",
+  "Billing Database": "Data & Storage",
+  "Orders Database": "Data & Storage",
+  "Search Database": "Data & Storage",
+  "Data Warehouse": "Data & Storage",
+  "Object Storage": "Data & Storage",
+
+  // Edge & Ingress
+  "API Gateway": "Edge & Ingress",
+  "Load Balancer": "Edge & Ingress",
+  "Edge Proxy": "Edge & Ingress",
+  "CDN": "Edge & Ingress",
+
+  // Core Services
+  "Auth Service": "Core Services",
+  "User Service": "Core Services",
+  "Profile Service": "Core Services",
+  "Session Service": "Core Services",
+  "Secrets Service": "Core Services",
+  "Config Service": "Core Services",
+  "Discovery Service": "Core Services",
+  "Feature Flags": "Core Services",
+  "Experiment Service": "Core Services",
+
+  // Commerce & Business
+  "Order Service": "Commerce & Business",
+  "Billing Service": "Commerce & Business",
+  "Payment Service": "Commerce & Business",
+  "Cart Service": "Commerce & Business",
+  "Checkout Service": "Commerce & Business",
+  "Inventory Service": "Commerce & Business",
+  "Shipping Service": "Commerce & Business",
+  "Tax Service": "Commerce & Business",
+  "Invoice Service": "Commerce & Business",
+  "Refund Service": "Commerce & Business",
+  "Fraud Detection": "Commerce & Business",
+  "Risk Engine": "Commerce & Business",
+
+  // Content & Search
+  "Catalog Service": "Content & Search",
+  "Search Service": "Content & Search",
+  "Search Indexer": "Content & Search",
+  "Recommendation Service": "Content & Search",
+  "Feed Service": "Content & Search",
+  "Comment Service": "Content & Search",
+  "Review Service": "Content & Search",
+  "Rating Service": "Content & Search",
+  "Media Service": "Content & Search",
+  "Image Processor": "Content & Search",
+  "Video Processor": "Content & Search",
+  "Upload Service": "Content & Search",
+  "Download Service": "Content & Search",
+
+  // Async & Infrastructure
+  "Event Bus": "Async & Infrastructure",
+  "Kafka Broker": "Async & Infrastructure",
+  "Worker Pool": "Async & Infrastructure",
+  "Scheduler": "Async & Infrastructure",
+  "Background Jobs": "Async & Infrastructure",
+  "Webhook Service": "Async & Infrastructure",
+  "Integration Hub": "Async & Infrastructure",
+  "CRM Connector": "Async & Infrastructure",
+  "ERP Connector": "Async & Infrastructure",
+  "Notification Service": "Async & Infrastructure",
+  "Email Service": "Async & Infrastructure",
+  "SMS Service": "Async & Infrastructure",
+  "Customer Support": "Async & Infrastructure",
+  "Audit Service": "Async & Infrastructure",
+  "Compliance Service": "Async & Infrastructure",
+  "Status Page": "Async & Infrastructure",
+  "Admin Service": "Async & Infrastructure",
+
+  // Observability Platform
+  "Metrics Collector": "Observability Platform",
+  "Log Pipeline": "Observability Platform",
+  "Trace Collector": "Observability Platform",
+  "Analytics Service": "Observability Platform",
+  "Reporting Service": "Observability Platform"
+};
+
+// Topological dependencies for graph modeling
+export const SERVICE_DEPENDENCIES: Record<string, string[]> = {
+  "Primary Database": [],
+  "Read Replica": ["Primary Database"],
+  "Redis Cluster": [],
+  "Cache Service": ["Redis Cluster"],
+  "Auth Database": ["Primary Database"],
+  "Billing Database": ["Primary Database"],
+  "Orders Database": ["Primary Database"],
+  "Search Database": ["Primary Database"],
+  "Auth Service": ["Primary Database", "Auth Database", "Redis Cluster"],
+  "User Service": ["Auth Service", "Primary Database"],
+  "Billing Service": ["Primary Database", "Billing Database", "Payment Service"],
+  "Payment Service": ["Fraud Detection", "Risk Engine", "Billing Database"],
+  "Order Service": ["Primary Database", "Orders Database", "Inventory Service", "Billing Service"],
+  "Checkout Service": ["Order Service", "Cart Service", "Payment Service", "Tax Service"],
+  "Cart Service": ["Redis Cluster", "Catalog Service"],
+  "API Gateway": ["Load Balancer", "Auth Service", "Order Service", "Billing Service", "Checkout Service", "Search Service"],
+  "Load Balancer": ["Edge Proxy"],
+  "Edge Proxy": ["CDN"],
+  "Profile Service": ["User Service", "Primary Database"],
+  "Search Service": ["Search Indexer", "Search Database", "Redis Cluster"],
+  "Search Indexer": ["Worker Pool", "Kafka Broker"],
+  "Worker Pool": ["Kafka Broker", "Event Bus"],
+  "Notification Service": ["Worker Pool", "Email Service", "SMS Service"],
+  "Reporting Service": ["Data Warehouse", "Read Replica", "Primary Database"],
+  "Status Page": ["API Gateway", "Metrics Collector"]
+};
+
+export const COMMON_SYMPTOMS = [
+  "CPU utilization above baseline (>85%)",
+  "P95 latency elevated (>450ms)",
+  "Error rate increased (>2.8%)",
+  "Memory usage trending high (>91%)",
+  "Queue depth above baseline (>1,200 msg)",
+  "Health check probe delayed (>3,000ms)",
+  "Connection pool nearing limit (96/100)",
+  "Request timeout detected on upstream socket",
+  "Thread starvation warning in runtime pool",
+  "Garbage collection pause duration spike"
+];
+
+export const INITIAL_INCIDENTS: Incident[] = [
+  {
+    id: "INC-204",
+    title: "Primary database slowdown & cascade",
+    root: "Primary Database",
+    severity: "Critical",
+    services: 11,
+    alerts: 11,
+    confidence: 94,
+    first_seen: "08:08:14",
+    status: "Investigating",
+    summary: "Database query latency is propagating to dependent services. 11 raw alerts grouped into one incident.",
+    hypothesis: "Unindexed multi-table JOIN on orders ledger saturated I/O bandwidth, exhausting available connection pool and blocking downstream API calls.",
+    affectedServices: [
+      { service: "Primary Database", role: "root_cause", alertCount: 1, primaryAlert: "Query latency above SLO (>1,850ms)", latencyMs: 1850, errorRatePercent: 4.8 },
+      { service: "Read Replica", role: "direct_dependent", alertCount: 1, primaryAlert: "Replication lag increased (>14.2s)", latencyMs: 420, errorRatePercent: 1.2 },
+      { service: "Auth Service", role: "direct_dependent", alertCount: 1, primaryAlert: "CPU utilization > 90%", latencyMs: 310, errorRatePercent: 3.5 },
+      { service: "Billing Service", role: "direct_dependent", alertCount: 1, primaryAlert: "P95 latency elevated (>720ms)", latencyMs: 720, errorRatePercent: 4.1 },
+      { service: "Orders Database", role: "direct_dependent", alertCount: 1, primaryAlert: "Connection pool saturation (98%)", latencyMs: 890, errorRatePercent: 5.2 },
+      { service: "Order Service", role: "direct_dependent", alertCount: 1, primaryAlert: "Request timeout detected", latencyMs: 1200, errorRatePercent: 7.9 },
+      { service: "API Gateway", role: "downstream_cascade", alertCount: 1, primaryAlert: "Request latency elevated & 504 spikes", latencyMs: 650, errorRatePercent: 6.4 },
+      { service: "Checkout Service", role: "downstream_cascade", alertCount: 1, primaryAlert: "Checkout latency elevated (>1.4s)", latencyMs: 1420, errorRatePercent: 8.1 },
+      { service: "Profile Service", role: "downstream_cascade", alertCount: 1, primaryAlert: "Database calls slowed", latencyMs: 380, errorRatePercent: 2.0 },
+      { service: "Notification Service", role: "downstream_cascade", alertCount: 1, primaryAlert: "Queue processing delayed", latencyMs: 290, errorRatePercent: 1.5 },
+      { service: "Status Page", role: "downstream_cascade", alertCount: 1, primaryAlert: "Customer-facing availability warning", latencyMs: 180, errorRatePercent: 0.9 }
+    ],
+    cascadeTimeline: [
+      { timeOffset: "T+00:00", service: "Primary Database", event: "Disk I/O burst; Query latency spiked to 1,850ms", severity: "Critical" },
+      { timeOffset: "T+00:18", service: "Read Replica", event: "Replication lag breached 14s barrier", severity: "High" },
+      { timeOffset: "T+00:32", service: "Orders Database", event: "Connection pool drained to 2% available", severity: "High" },
+      { timeOffset: "T+00:45", service: "Auth Service", event: "Session validation thread queue backlog; CPU 92%", severity: "High" },
+      { timeOffset: "T+01:02", service: "Billing Service", event: "Payment reconciliation timed out on database lock", severity: "High" },
+      { timeOffset: "T+01:14", service: "Order Service", event: "Upstream database connection timed out after 5s", severity: "High" },
+      { timeOffset: "T+01:28", service: "API Gateway", event: "Ingress 504 Gateway Timeout rate jumped to 6.4%", severity: "High" },
+      { timeOffset: "T+01:45", service: "Checkout Service", event: "End-to-end checkout funnel stalled at payment step", severity: "Medium" },
+      { timeOffset: "T+02:00", service: "Profile Service", event: "Profile hydration fallback triggered", severity: "Medium" },
+      { timeOffset: "T+02:15", service: "Notification Service", event: "Transactional email retry queue accumulated", severity: "Medium" },
+      { timeOffset: "T+02:30", service: "Status Page", event: "Public synthetic health checks triggered yellow state", severity: "Medium" }
+    ]
+  },
+  {
+    id: "INC-203",
+    title: "Search indexing backlog & worker starvation",
+    root: "Search Indexer",
+    severity: "High",
+    services: 3,
+    alerts: 7,
+    confidence: 87,
+    first_seen: "07:54:10",
+    status: "Monitoring",
+    summary: "Indexer queue growth correlates with search error-rate and worker queue alerts.",
+    hypothesis: "Bulk batch re-indexing ingestion overwhelmed worker partition consumer threads, creating downstream cache misses.",
+    affectedServices: [
+      { service: "Search Indexer", role: "root_cause", alertCount: 3, primaryAlert: "Ingestion queue backlog (>45,000 docs)", latencyMs: 480, errorRatePercent: 3.1 },
+      { service: "Search Service", role: "direct_dependent", alertCount: 2, primaryAlert: "Error rate increased on fuzzy query", latencyMs: 290, errorRatePercent: 4.2 },
+      { service: "Worker Pool", role: "direct_dependent", alertCount: 2, primaryAlert: "Queue depth above baseline", latencyMs: 340, errorRatePercent: 1.8 }
+    ],
+    cascadeTimeline: [
+      { timeOffset: "T+00:00", service: "Search Indexer", event: "Bulk document indexing partition backlog", severity: "High" },
+      { timeOffset: "T+00:40", service: "Worker Pool", event: "Thread pool saturated with indexing jobs", severity: "Medium" },
+      { timeOffset: "T+01:10", service: "Search Service", event: "Stale index queries triggering fallback searches", severity: "Medium" }
+    ]
+  }
+];
+
+export const INITIAL_ALERTS: Alert[] = [
+  {
+    id: "ALT-91823",
+    time: "08:14:02",
+    timestamp: Date.now() - 18000,
+    service: "Primary Database",
+    severity: "Critical",
+    title: "Query latency above SLO",
+    source: "Metrics",
+    incident_id: "INC-204",
+    correlated: true,
+    status: "Open",
+    metric: "db.query_duration_p99",
+    threshold: "> 250ms",
+    observed: "1,850ms"
+  },
+  {
+    id: "ALT-88412",
+    time: "08:13:58",
+    timestamp: Date.now() - 22000,
+    service: "API Gateway",
+    severity: "High",
+    title: "Request latency elevated",
+    source: "Uptime",
+    incident_id: "INC-204",
+    correlated: true,
+    status: "Open",
+    metric: "http.ingress_duration_p95",
+    threshold: "> 180ms",
+    observed: "650ms"
+  },
+  {
+    id: "ALT-76491",
+    time: "08:13:42",
+    timestamp: Date.now() - 38000,
+    service: "Auth Service",
+    severity: "High",
+    title: "CPU utilization > 90%",
+    source: "Metrics",
+    incident_id: "INC-204",
+    correlated: true,
+    status: "Open",
+    metric: "container.cpu_utilization",
+    threshold: "> 85%",
+    observed: "93.4%"
+  },
+  {
+    id: "ALT-65129",
+    time: "08:13:25",
+    timestamp: Date.now() - 55000,
+    service: "Billing Service",
+    severity: "Medium",
+    title: "P95 latency elevated",
+    source: "Tracing",
+    incident_id: "INC-204",
+    correlated: true,
+    status: "Open",
+    metric: "trace.span_duration_p95",
+    threshold: "> 300ms",
+    observed: "720ms"
+  },
+  {
+    id: "ALT-54109",
+    time: "08:13:10",
+    timestamp: Date.now() - 70000,
+    service: "Orders Database",
+    severity: "High",
+    title: "Connection pool saturation",
+    source: "Logs",
+    incident_id: "INC-204",
+    correlated: true,
+    status: "Open",
+    metric: "db.pool.active_connections",
+    threshold: "> 90%",
+    observed: "98.2%"
+  },
+  {
+    id: "ALT-49821",
+    time: "08:12:45",
+    timestamp: Date.now() - 95000,
+    service: "Search Service",
+    severity: "Medium",
+    title: "Error rate increased",
+    source: "Metrics",
+    incident_id: "INC-203",
+    correlated: true,
+    status: "Open",
+    metric: "http.5xx_rate",
+    threshold: "> 1.5%",
+    observed: "4.2%"
+  },
+  {
+    id: "ALT-41002",
+    time: "08:12:30",
+    timestamp: Date.now() - 110000,
+    service: "Worker Pool",
+    severity: "Low",
+    title: "Queue depth above baseline",
+    source: "Logs",
+    incident_id: "INC-203",
+    correlated: true,
+    status: "Open",
+    metric: "queue.depth",
+    threshold: "> 500",
+    observed: "1,420"
+  },
+  // Uncorrelated raw noise alerts to show authentic production environment
+  {
+    id: "ALT-38290",
+    time: "08:11:55",
+    timestamp: Date.now() - 145000,
+    service: "Image Processor",
+    severity: "Low",
+    title: "Temporary thumbnail memory spike",
+    source: "Metrics",
+    incident_id: null,
+    correlated: false,
+    status: "Open",
+    metric: "process.resident_memory",
+    threshold: "> 800MB",
+    observed: "824MB"
+  },
+  {
+    id: "ALT-32194",
+    time: "08:11:15",
+    timestamp: Date.now() - 185000,
+    service: "CDN",
+    severity: "Low",
+    title: "Edge cache hit ratio dip",
+    source: "Uptime",
+    incident_id: null,
+    correlated: false,
+    status: "Open",
+    metric: "cdn.hit_ratio",
+    threshold: "< 85%",
+    observed: "83.1%"
+  },
+  {
+    id: "ALT-29104",
+    time: "08:10:40",
+    timestamp: Date.now() - 220000,
+    service: "Analytics Service",
+    severity: "Medium",
+    title: "Hourly rollup latency warning",
+    source: "Tracing",
+    incident_id: null,
+    correlated: false,
+    status: "Open",
+    metric: "batch.job_duration",
+    threshold: "> 120s",
+    observed: "148s"
+  }
+];

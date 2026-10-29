@@ -1,0 +1,8 @@
+{
+  "name": "Remix SignalOps AIOps Alert Intelligence",
+  "description": "Enterprise AIOps alert correlation, noise reduction, and root-cause intelligence platform across 70 microservices with real-time incident dependency cascades.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
